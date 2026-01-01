@@ -6,16 +6,18 @@ const args = process.argv.slice(3);
 
 const ls = async (folderName) => {
     const filesArray = await listFiles(folderName);
+    console.log(filesArray);
     filesArray.forEach((direnObj) => {
         console.log(direnObj.name);
     })
 
+    console.log('-----------------------');
 
     if (args) {
         args.forEach(async (arg) => {
             if (arg === '--show-types') {
-                // console.log(files);
-                // await fileTypes(files);
+                const file_data = await fileTypes(filesArray);
+                console.log(file_data);
             }
         })
     }
