@@ -33,26 +33,41 @@ const SIMPLE_CATEGORIES = {
 };
 
 const fileTypes = async (files) => {
-    files.forEach(async (direnObj) => {
+    const filesType={}
+    for( const direnObj of files) {
         try {
             const fileName = direnObj.name.replace(/\x1B\[[0-9]*m/g, '');
             const filePath = `${direnObj.parentPath}/${fileName}`
             
             const stat = await fs.stat(filePath);
+            let file_size = formatSize(stat.size);
             if (direnObj.isFile()) {
                 const fileFormat = fileName.toLowerCase().split('.', 2)[1];
                 const fileType = getFileType(fileFormat);
                 // console.log(`${fileName}: [${fileType}]\n`);
-                return {type: 'file', file_name: fileName, file_type:fileType}
+                filesType[fileName] = { icon: '📄', isFile: true, file_name: fileName, size: file_size, file_type: fileType }
+                
             } else if (direnObj.isDirectory()) {
-                return { type: 'directory', size: stat.size };
+                
+                
+                filesType[fileName] = { icon:'📁', isFile:false, size: file_size}
             }
         } catch (err) {
             console.log(`no stat for ${err}`);
         }
         
-    });
+    };
+
+    return filesType;
 }
+
+const formatSize = (bytes) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
 
 const getFileType = (format) => {
     if (SIMPLE_CATEGORIES['document'].includes(format)) {

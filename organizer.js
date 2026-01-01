@@ -16,8 +16,11 @@ const ls = async (folderName) => {
     if (args) {
         args.forEach(async (arg) => {
             if (arg === '--show-types') {
-                const file_data = await fileTypes(filesArray);
-                console.log(file_data);
+                const file_types= await fileTypes(filesArray);
+                for (const key in file_types) {
+                    if (file_types[key]['isFile']) console.log(`${file_types[key]['icon']} ${key} [${file_types[key]['file_type']}] [${file_types[key]['size']}]`);
+                    else console.log(`${file_types[key]['icon']} ${key} [${file_types[key]['size']}]`);
+                }
             }
         })
     }
