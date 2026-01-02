@@ -1,4 +1,19 @@
 const fs = require('fs/promises');
+const SIMPLE_CATEGORIES = {
+    "document": ['pdf', 'doc', 'docx', 'txt'],
+    "code": ['js', 'py', 'java', 'cpp', 'html', 'css', 'php'],
+    "image": ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'],
+    "video": ['avi', 'mp4', 'webm', 'mov'],
+    "audio": ['mp3', 'wav', 'flac', 'aac'],
+    "archive": ['zip', 'rar', '7z'],
+    "security": ['pem', 'crt', 'key', 'cer'],
+    "config": ['json', 'yml', 'yaml', 'toml', 'ini', 'env'],
+    "data": ['csv', 'xml', 'sql', 'db', 'parquet'],
+};
+const args = process.argv.slice(3);
+const shouldShowTypes = args.includes('--show-types');
+const shouldShowSize = args.includes('--size');
+const shouldShowDate = args.includes('--date');
 
 const listFiles = async (dir) => {
     const files = await fs.readdir(dir, { encoding: 'utf-8', withFileTypes: true, recursive: false });
@@ -20,45 +35,104 @@ const listFiles = async (dir) => {
     return files;
 }
 
-const SIMPLE_CATEGORIES = {
-    "document": ['pdf', 'doc', 'docx', 'txt'],
-    "code": ['js', 'py', 'java', 'cpp', 'html', 'css', 'php'], 
-    "image": ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'],
-    "video": ['avi', 'mp4', 'webm', 'mov'],
-    "audio": ['mp3', 'wav', 'flac', 'aac'],
-    "archive": ['zip', 'rar', '7z'],
-    "security": ['pem', 'crt', 'key', 'cer'],
-    "config": ['json', 'yml', 'yaml', 'toml', 'ini', 'env'],
-    "data": ['csv', 'xml', 'sql', 'db', 'parquet'],
-};
-
-const fileTypes = async (files) => {
-    const filesType={}
-    for( const direnObj of files) {
+const getType = async (direnObj) => {
+    console.log('Getting types...');
+    // const filesType={}
+    // for( const direnObj of files) {
         try {
             const fileName = direnObj.name.replace(/\x1B\[[0-9]*m/g, '');
-            const filePath = `${direnObj.parentPath}/${fileName}`
             
-            const stat = await fs.stat(filePath);
-            let file_size = formatSize(stat.size);
-            if (direnObj.isFile()) {
+            // if (direnObj.isFile()) {
                 const fileFormat = fileName.toLowerCase().split('.', 2)[1];
                 const fileType = getFileType(fileFormat);
-                // console.log(`${fileName}: [${fileType}]\n`);
-                filesType[fileName] = { icon: '📄', isFile: true, file_name: fileName, size: file_size, file_type: fileType }
+
+                // filesType[fileName] = fileType;
                 
-            } else if (direnObj.isDirectory()) {
+            // } else if (direnObj.isDirectory()) {
                 
-                
-                filesType[fileName] = { icon:'📁', isFile:false, size: file_size}
-            }
+                // filesType[fileName] = { icon:'📁', isFile:false}
+            // }
+
+            return fileType;
         } catch (err) {
             console.log(`no stat for ${err}`);
         }
-        
-    };
+    // };
 
     return filesType;
+}
+
+const getSize = async (direnObj) => { 
+    console.log('Getting sizes...');
+    // const filesSizes = {}
+    // for (const direnObj of files) {
+        try {
+
+            const fileName = direnObj.name.replace(/\x1B\[[0-9]*m/g, '');
+            const filePath = `${direnObj.parentPath}/${fileName}`
+
+            const stat = await fs.stat(filePath);
+
+            let file_size = formatSize(stat.size);
+
+            // if (direnObj.isFile()) {
+                // filesSizes[fileName] = file_size
+
+                
+                // filesSizes[fileName] = { icon: '📄', isFile: true, file_name: fileName, size: file_size }
+
+            // } else if (direnObj.isDirectory()) {
+
+                // filesSizes[fileName] = file_size;
+            // }
+            
+            return file_size;
+
+        } catch (err) {
+            console.log(`no stat for ${err}`);
+        }
+
+    // };
+
+    return filesSizes;
+}
+
+const getDate = async (direnObj) => {
+    // const filesModified = {}
+    
+    try {
+
+        const fileName = direnObj.name.replace(/\x1B\[[0-9]*m/g, '');
+        const filePath = `${direnObj.parentPath}/${fileName}`
+
+        const stat = await fs.stat(filePath);
+        
+            // filesModified[fileName] = new Date(stat.mtimeMs)
+            // filesModified[fileName] = { icon: '📄', isFile: true, file_name: fileName, size: file_size }
+        return new Date(stat.mtimeMs)
+
+    } catch (err) {
+        console.log(`no stat for ${err}`);
+    }
+
+
+    return filesModified;
+}
+
+const getFiles = async (filesArray) => {
+    // Collect ALL data in one object
+    const fileData = {};
+    for (const direnObj of filesArray) {
+        const filename = direnObj.name.replace(/\x1B\[[0-9]*m/g, '');
+        fileData[filename] = {
+            name: filename,
+            icon: direnObj.isFile() ? '📄' : '📁',
+            type: shouldShowTypes ? await getType(direnObj) : null,
+            size: shouldShowSize ? await getSize(direnObj) : null,
+            date: shouldShowDate ? await getDate(direnObj) : null
+        };
+    }
+    return fileData
 }
 
 const formatSize = (bytes) => {
@@ -67,7 +141,6 @@ const formatSize = (bytes) => {
     if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
-
 
 const getFileType = (format) => {
     if (SIMPLE_CATEGORIES['document'].includes(format)) {
@@ -92,6 +165,8 @@ const getFileType = (format) => {
 
 module.exports = {
     listFiles,
-    fileTypes,
-    
+    getType,
+    getSize,
+    getDate,
+    getFiles
 }
