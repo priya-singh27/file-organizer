@@ -14,22 +14,21 @@ const ls = async (folderName) => {
 
     console.log('-----------------------');
 
-    const fileData = await getFiles(filesArray);
-    for (const filename in fileData) {
-        const data = fileData[filename];
-        let output = `${data.icon} ${data.name}`; 
-        // console.log(data);
+    const files = await getFiles(filesArray);
+    for (const filename in files) {
+        
+        let file_data = files[filename]
+        let data = `${file_data['icon']} ${file_data['name']}`;
+        const meta_data = [];
+        if (file_data.type) meta_data.push(file_data.type);
+        if (file_data.size) meta_data.push(file_data.size);
+        if (file_data.date) meta_data.push(file_data.date);
+        
+        if (meta_data.length > 0)
+            data += `[${meta_data.join(', ')}]`;
 
-        const parts = [];
-        if (data.type) parts.push(data.type);
-        if (data.size) parts.push(data.size);
-        if (data.date) parts.push(data.date);
+        console.log(data);
 
-        if (parts.length > 0) {
-            output += ` [${parts.join(', ')}]`;
-        }
-
-        console.log(output);
     }
 }
 ls(folderName);
