@@ -2,7 +2,7 @@ const process = require('process');
 const { listFiles,
     getFiles } = require('./ls-command');
 
-const folderName = process.argv[2];
+const folderName = process.argv[3];
 const args = process.argv.slice(3);
 
 const ls = async (folderName) => {
@@ -31,6 +31,8 @@ const ls = async (folderName) => {
 
     }
 }
-ls(folderName);
+
+
+if (process.argv[2]==='ls') ls(folderName);
 
 
